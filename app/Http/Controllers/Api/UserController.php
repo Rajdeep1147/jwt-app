@@ -7,7 +7,10 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Validator;
 use Illuminate\Support\Facades\Hash;
-
+use Mail;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Carbon;
 class UserController extends Controller
 {
     public function register(Request $request)
@@ -83,6 +86,24 @@ class UserController extends Controller
            return response()->json(['success'=>true,'data'=>auth()->user()]);
         }catch(Exception $e){
             return response()->json(['success'=>false,'msg'=>$e->getMessage()]);
+        }
+    }
+
+    public function verifyEmail($email)
+    {
+        if(auth()->user()){
+            $user = User::where('email',$email)->get();
+            if(count($user) >0){
+                $data['email'] = $email;
+                $data['title'] = "Email Verification";
+                $data['body'] = "Please Click the link to verify the Email";
+
+                // Mail::send('verifyMail',['data'=>$data,function($message)]);
+            }else{
+                return response()->json(['success'=>false,'msg'=>'User is Not Found']);
+            }
+        }else{
+            return response()->json(['success'=>false,'msg'=>'User is Not Authenticated']);
         }
     }
 }

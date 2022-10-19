@@ -24,6 +24,7 @@ Route::group(['middleware'=>'api'],function($routes){
     Route::any('/login',[UserController::class,'login'])->name('login');
     Route::get('/logout',[UserController::class,'logout'])->name('logout');
     Route::post('/profile',[UserController::class,'profile'])->name('profile');
+    Route::get('/send-verify-mail/{email}',[UserController::class,'verifyEmail'])->name('verify.email');
 });
 
 
