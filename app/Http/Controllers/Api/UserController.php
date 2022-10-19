@@ -8,6 +8,7 @@ use App\Models\User;
 use Validator;
 use Illuminate\Support\Facades\Hash;
 use Mail;
+use App\Mail\VerifyMail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Carbon;
@@ -94,16 +95,49 @@ class UserController extends Controller
         if(auth()->user()){
             $user = User::where('email',$email)->get();
             if(count($user) >0){
-                $data['email'] = $email;
-                $data['title'] = "Email Verification";
-                $data['body'] = "Please Click the link to verify the Email";
+           
 
+                $random = Str::random(40);
+                $domain = URL::to('/');
+                $url = $domain.'/verify-mail/'.$random;
+
+                
+
+                // $data['email'] = $email;
+                $details = [
+
+                    'title' => 'Mail from ItSolutionStuff.com',
+                    'body' => 'This is for testing email using smtp',
+                    'url'=> $url
+                ];
                 // Mail::send('verifyMail',['data'=>$data,function($message)]);
+                \Mail::to($email)->send(new \App\Mail\VerifyMail($details));
+                $user = User::find($user[0]['id']);
+                $user->remember_token = $random;
+                $user->save();
+                return response()->json(['success'=>true,'msg'=>'Mail Sent successfully']);
             }else{
                 return response()->json(['success'=>false,'msg'=>'User is Not Found']);
             }
         }else{
             return response()->json(['success'=>false,'msg'=>'User is Not Authenticated']);
+        }
+    }
+
+    public function verificationMail($token)
+    {
+        $user = User::where('remember_token',$token)->get();
+        if(count($user)>0){
+            $datetime = Carbon::now()->format('Y-m-d H:i:s');
+            $user = User::find($user[0]['id']);
+            $user->remember_token ='';
+            $user->is_verify = '1';
+            $user->email_verified_at = $datetime;
+            $user->save();
+
+            return "<h1>Email Verify Successfully</h1>";
+        }else{
+            return view('404');
         }
     }
 }
